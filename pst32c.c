@@ -302,11 +302,11 @@ VECTOR* backbone(s,VECTOR phi,VECTOR psi){
 	
 	//angoli std del backbone
 	
-	theta1=2.028;//theta-ca-cn
+	type theta1=2.028;//theta-ca-cn
 	
-	theta2=2.124;//theta-cn-ca
+	type theta2=2.124;//theta-cn-ca
 	
-	theta3=1.940;//theta-n-ca-c
+	type theta3=1.940;//theta-n-ca-c
 	
 	//ora dovrei allocare la matrice
 	
