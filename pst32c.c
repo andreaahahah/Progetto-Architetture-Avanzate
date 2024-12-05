@@ -278,14 +278,19 @@ void gen_rnd_mat(VECTOR v, int N){
 // PROCEDURE ASSEMBLY
 extern void prova(params* input);
 
-void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
-	//da qui inserire poi definizione funzione backbone
-	
+int s=input->N;//riguardare
+//dimensione
+
+VECTOR backbone();
+
+
+VECTOR* backbone(s,VECTOR phi,VECTOR psi){
+
 	int i,j=0;
 	
 	//mi prendo la sequenza(la dimensione)
 	
-	int n= input -> N;
+	
 	
 	//distanza n-calfa,calfa-c,c-N
 	
@@ -297,21 +302,23 @@ void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
 	
 	//angoli std del backbone
 	
-	theta1=2.028;
+	theta1=2.028;//theta-ca-cn
 	
-	theta2=2.124;
+	theta2=2.124;//theta-cn-ca
 	
-	theta3=1.940;
+	theta3=1.940;//theta-n-ca-c
 	
 	//ora dovrei allocare la matrice
 	
-	MATRIX coords=alloc_matrix(n*3,3);//n*3 ->righe;3 colonne
+	VECTOR* coords=alloc_matrix(n*3,3);//n*3 ->righe;3 colonne
 	
 	//setto le tre coord
 	
-	coords[0]=0;//todo 
-	coords[1]=0;
-	coords[2]=0;
+	coords[0]=[0,0,0]; 
+	coords[1]=[dist_ca_n,0,0];
+	//coords[2]=0;
+	
+	//coord vett 1
 	
 	
 	type v1,v2;
@@ -326,7 +333,7 @@ void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
 		
 		
 		
-		int idx=i*3;
+		int idx=i*3;//indice base ammin.
 	
 		
 		
@@ -400,26 +407,104 @@ void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
 	VECTOR axis=alloc_matrix(3,1);//tre dimensioni: x,y,z quindi 3 righe una colonna per come è strutturato il metodo e 
 	//le allocazioni in memoria
 	//todo-->metterlo sopra all'inizio del metodo 
- 	
- 	MATRIX rotation(axis,theta){
+
+
+
+}//backbone
+
+
+
+//funz rotation ok!C is FANDASTIC!!
+
+
+ 	MATRIX rotation(VECTOR axis,type theta){
  		
- 		for(i=0;i<3;i++){
+ 		//normalizz.vett.
+ 		//il prod.scalare è stato realizzato all'interno della normalizzazione
+ 		
+ 		type norm=sqrt(axis[0]*axis[0]+axis[1]*axis[1]+axis[2]*axis[2]);
  		
  		
- 			axis[i]=axis[i]/(axis[i]*axis[i]);//penso intenda questo per prodotto scalare,quindi el per el.
+ 		VECTOR assi_norm=(VECTOR)get_block(sizeof(type),3);
  		
+ 		//fase di normalizzazione
  		
+ 		for (int i=0;i<3;i++){
+ 		
+ 			assi_norm[i]=axis[i]/norm;
  		}//for
  		
  		
+ 	
+ 	
+ 		//usiamo le approssimazioni per calc.i coefficenti
  		
- 		type a=math.cos(theta/2.0);
+ 		type half_theta=theta/2.0;
  		
- 		//fare impl. 3 riga pseudocodice funzione rotation
+ 		type cos_t=1-(half_theta*half_theta)/2 + (half_theta*half_theta*half_theta*half_theta)/24-(half_theta*half_theta*half_theta*half_theta*half_theta*half_theta)/720;//appr.cos
+		
+		
+		type sen_t=half_theta-(half_theta*half_theta*half_theta)/6+(half_theta*half_theta*half_theta*half_theta*half_theta)/120-(half_theta*half_theta*half_theta*half_theta*half_theta*half_theta*half_theta)/5040;
+		
+		type a=cos_t;
+		
+		//definiamo b,c,d
+		
+		type b= -assi_norm[0]*sen_t;
+		
+		type c= -assi_norm[1]*sen_t; 
+		
+		type d= -assi_norm[2]*sen_t;
+		
+		//allochiamo la matrice
+		
+		MATRIX rot_matrix=alloc_matrix(3,3);
+		
+		type qa=a*a;
+		
+		type qb=b*b;
+		
+		type qc=c*c;
+		
+		type qd=d*d;
+		
+		rot_matrix[0]=qa+qb-qc-qd;
+		
+		rot_matrix[1]=2*(b*c+a*d);
+		
+		rot_matrix[2]=2*(b*d-a*c);
+		
+		rot_matrix[3]=2*(b*c-a*d);
+		
+		rot_matrix[4]=qa+qc-qb-qd;
+		
+		rot_matrix[5]=2*(c*d+a*b);
+		
+		rot_matrix[6]=2*(b*d+a*c);
+		
+		rot_matrix[7]=2*(c*d-a*b);
+		
+		rot_matrix[8]=qa+qd-qb-qc;
+		
+		//liberiamo lo spazio allocato
+		
+		free_block(assi_norm);
+		
+	return rot_matrix;
+ 		
+ 		
  		
  		
  	
  	}//rotation
+
+//fine rotation
+
+void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
+	//da qui inserire poi definizione funzione backbone
+	
+	
+ 	
 	
 	
 	
