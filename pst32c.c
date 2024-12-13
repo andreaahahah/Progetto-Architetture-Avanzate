@@ -47,6 +47,7 @@
 #include <libgen.h>
 #include <xmmintrin.h>
 
+#define _USE_MATH_DEFINES
 #define	type		float
 #define	MATRIX		type*
 #define	VECTOR		type*
@@ -75,6 +76,7 @@ typedef struct {
 
 } params;
 
+params myParams;
 
 /*
 * 
@@ -278,18 +280,21 @@ void gen_rnd_mat(VECTOR v, int N){
 // PROCEDURE ASSEMBLY
 extern void prova(params* input);
 
-int s=input->N;//riguardare
+//int s=stru->N;
+ 
+ 
+//riguardare
 //dimensione
 
 VECTOR backbone();
 
 
-VECTOR* backbone(s,VECTOR phi,VECTOR psi){
+VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
 
+	int n = input->N;
 	int i,j=0;
 	
-	//mi prendo la sequenza(la dimensione)
-	
+	//mi prendo la sequenza(la dimensione) cioè N
 	
 	
 	//distanza n-calfa,calfa-c,c-N
@@ -310,18 +315,23 @@ VECTOR* backbone(s,VECTOR phi,VECTOR psi){
 	
 	//ora dovrei allocare la matrice
 	
-	VECTOR* coords=alloc_matrix(n*3,3);//n*3 ->righe;3 colonne
+	MATRIX coords=alloc_matrix(n*3,3);//n*3 ->righe;3 colonne
 	
 	//setto le tre coord
 	
-	coords[0]=[0,0,0]; 
-	coords[1]=[dist_ca_n,0,0];
+	coords[0]=0;
+	coords[1]=0;
+	coords[2]=0;
+
+	coords[3]=dist_ca_n;
+	coords[4]=0;
+	coords[5]=0;
 	//coords[2]=0;
 	
 	//coord vett 1
 	
 	
-	type v1,v2;
+	type v1,v2,v3;
 	
 	MATRIX rot;
 	
@@ -331,11 +341,7 @@ VECTOR* backbone(s,VECTOR phi,VECTOR psi){
 	
 	for(i=0;i<n;i++){
 		
-		
-		
 		int idx=i*3;//indice base ammin.
-	
-		
 		
 		if(i>0){
 			
@@ -345,15 +351,15 @@ VECTOR* backbone(s,VECTOR phi,VECTOR psi){
 			
 			//calcolo v1/(|v1|)
 			
-			rot=rotation(v1,theta2);
+			rot=rotation(&v1,theta2);
 			
-			newv[0]=rot[1]*dist_c_n;
+			newv[0]=rot[3]*dist_c_n;
 			newv[1]=rot[4]*dist_c_n;
-			newv[2]=rot[7]*dist_c_n;
+			newv[2]=rot[5]*dist_c_n;
 
 			//newv={0,dist_c_n,0}*rot;//prod matr penso non corretto,va acceduto diversamente in memoria
 			
-			coords[idx]=coords[idx-1]+newv;
+			coords[idx]=coords[idx-1]+newv[0]+newv[1]+newv[2];//effettuare questa moltiplicazione
 			
 			//posiziono c alfa usando phi(vettore angolo phi)
 			
@@ -361,15 +367,15 @@ VECTOR* backbone(s,VECTOR phi,VECTOR psi){
 			
 			v2=v2/abs(v2);
 			
-			rot=rotation(v2,phi[i]);
+			rot=rotation(&v2,phi[i]);
 
-			newv[0]=rot[1]*dist_ca_n;
+			newv[0]=rot[3]*dist_ca_n;
 			newv[1]=rot[4]*dist_ca_n;
-			newv[2]=rot[7]*dist_ca_n;
+			newv[2]=rot[5]*dist_ca_n;
 			
 			//newv={0,dist_ca_n,0}*rot;//prodotto matr.//rivedere penso non corretto va acceduto diversamente in mem
 			
-			coords[idx+1]=coords[idx]+newv;
+			coords[idx+1]=coords[idx]+newv[0]+newv[1]+newv[2];
 		
 		
 		
@@ -383,15 +389,15 @@ VECTOR* backbone(s,VECTOR phi,VECTOR psi){
 			
 	 	v3=v3/abs(v3);
 			
-	 	rot=rotation(v3,psi[i]);
+	 	rot=rotation(&v3,psi[i]);
 
-		newv[0]=rot[1]*dist_ca_c;
+		newv[0]=rot[3]*dist_ca_c;
 		newv[1]=rot[4]*dist_ca_c;
-		newv[2]=rot[7]*dist_ca_c;
+		newv[2]=rot[5]*dist_ca_c;
 
 		//newv={0,dist_ca_c,0}*rot;//rivedere 
 			
-	 	coords[idx+2]=coords[idx+1]+newv;
+	 	coords[idx+2]=coords[idx+1]+newv[0]+newv[1]+newv[2];
 	
 	
 	
@@ -452,7 +458,7 @@ VECTOR* backbone(s,VECTOR phi,VECTOR psi){
 		
 		type b= -assi_norm[0]*sen_t;
 		
-		type c= -assi_norm[1]*sen_t; 
+		type c= -assi_norm[1]*sen_t;
 		
 		type d= -assi_norm[2]*sen_t;
 		
@@ -687,7 +693,7 @@ int main(int argc, char** argv) {
 	sprintf(fname_psi, "out32_%d_%d_psi.ds2", input->N, input->sd);
 	save_out(fname_psi, input->psi, input->N);
 	if(input->display){
-		if(input->phi == NULL || input->psi)
+		if(input->phi == NULL || input->psi == NULL)
 			printf("out: NULL\n");
 		else{
 			int i,j;
