@@ -1,43 +1,4 @@
-/**************************************************************************************
-* 
-* CdL Magistrale in Ingegneria Informatica
-* Corso di Architetture e Programmazione dei Sistemi di Elaborazione - a.a. 2024/25
-* 
-* Progetto dell'algoritmo Predizione struttura terziaria proteine 221 231 a
-* in linguaggio assembly x86-32 + SSE
-* 
-* F. Angiulli F. Fassetti S. Nisticò, novembre 2024
-* 
-**************************************************************************************/
 
-/*
-* 
-* Software necessario per l'esecuzione:
-* 
-*    NASM (www.nasm.us)
-*    GCC (gcc.gnu.org)
-* 
-* entrambi sono disponibili come pacchetti software 
-* installabili mediante il packaging tool del sistema 
-* operativo; per esempio, su Ubuntu, mediante i comandi:
-* 
-*    sudo apt-get install nasm
-*    sudo apt-get install gcc
-* 
-* potrebbe essere necessario installare le seguenti librerie:
-* 
-*    sudo apt-get install lib32gcc-4.8-dev (o altra versione)
-*    sudo apt-get install libc6-dev-i386
-* 
-* Per generare il file eseguibile:
-* 
-* nasm -f elf32 pst32.nasm && gcc -m32 -msse -O0 -no-pie sseutils32.o pst32.o pst32c.c -o pst32c -lm && ./pst32c $pars
-* 
-* oppure
-* 
-* ./runpst32
-* 
-*/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -53,6 +14,7 @@
 #define	VECTOR		type*
 
 #define random() (((type) rand())/RAND_MAX)
+#define MIN(a, b) ((a) < (b) ? (a) : (b)) // dichiaro la funzione minimo
 
 type hydrophobicity[] = {1.8, -1, 2.5, -3.5, -3.5, 2.8, -0.4, -3.2, 4.5, -1, -3.9, 3.8, 1.9, -3.5, -1, -1.6, -3.5, -4.5, -0.8, -0.7, -1, 4.2, -0.9, -1, -1.3, -1};		// hydrophobicity
 type volume[] = {88.6, -1, 108.5, 111.1, 138.4, 189.9, 60.1, 153.2, 166.7, -1, 168.6, 166.7, 162.9, 114.1, -1, 112.7, 143.8, 173.4, 89.0, 116.1, -1, 140.0, 227.8, -1, 193.6, -1};		// volume
@@ -85,10 +47,10 @@ params myParams;
 * 	di memoria, ma a scelta del candidato possono essere 
 * 	memorizzate mediante array di array (float**).
 * 
-* 	In entrambi i casi il candidato dovr� inoltre scegliere se memorizzare le
+* 	In entrambi i casi il candidato dovr  inoltre scegliere se memorizzare le
 * 	matrici per righe (row-major order) o per colonne (column major-order).
 *
-* 	L'assunzione corrente � che le matrici siano in row-major order.
+* 	L'assunzione corrente   che le matrici siano in row-major order.
 * 
 */
 
@@ -130,7 +92,7 @@ void dealloc_matrix(void* mat) {
 * 	successivi N*M*4 byte: matrix data in row-major order --> numeri floating-point a precisione singola
 * 
 *****************************************************************************
-*	Se lo si ritiene opportuno, � possibile cambiare la codifica in memoria
+*	Se lo si ritiene opportuno,   possibile cambiare la codifica in memoria
 * 	della matrice. 
 *****************************************************************************
 * 
@@ -173,7 +135,7 @@ MATRIX load_data(char* filename, int *n, int *k) {
 * 	successivi N*M*1 byte: matrix data in row-major order --> charatteri che compongono la stringa
 * 
 *****************************************************************************
-*	Se lo si ritiene opportuno, � possibile cambiare la codifica in memoria
+*	Se lo si ritiene opportuno,   possibile cambiare la codifica in memoria
 * 	della matrice. 
 *****************************************************************************
 * 
@@ -288,139 +250,8 @@ extern void prova(params* input);
 
 VECTOR backbone();
 
-
-VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
-
-	int n = input->N;
-	int i,j=0;
-	
-	//mi prendo la sequenza(la dimensione) cioè N
-	
-	
-	//distanza n-calfa,calfa-c,c-N
-	
-	type dist_ca_n=1.46;
-	
-	type dist_ca_c=1.52;
-	
-	type dist_c_n=1.33;
-	
-	//angoli std del backbone
-	
-	type theta1=2.028;//theta-ca-cn
-	
-	type theta2=2.124;//theta-cn-ca
-	
-	type theta3=1.940;//theta-n-ca-c
-	
-	//ora dovrei allocare la matrice
-	
-	MATRIX coords=alloc_matrix(n*3,3);//n*3 ->righe;3 colonne
-	
-	//setto le tre coord
-	
-	coords[0]=0;
-	coords[1]=0;
-	coords[2]=0;
-
-	coords[3]=dist_ca_n;
-	coords[4]=0;
-	coords[5]=0;
-	//coords[2]=0;
-	
-	//coord vett 1
-	
-	
-	type v1,v2,v3;
-	
-	MATRIX rot;
-	
-	VECTOR newv;
-	
-	//costruire la catena
-	
-	for(i=0;i<n;i++){
-		
-		int idx=i*3;//indice base ammin.
-		
-		if(i>0){
-			
-			type v1=coords[idx-1]-coords[idx-2];//vettore calfa meno c
-			
-			v1=v1/abs(v1);
-			
-			//calcolo v1/(|v1|)
-			
-			rot=rotation(&v1,theta2);
-			
-			newv[0]=rot[3]*dist_c_n;
-			newv[1]=rot[4]*dist_c_n;
-			newv[2]=rot[5]*dist_c_n;
-
-			//newv={0,dist_c_n,0}*rot;//prod matr penso non corretto,va acceduto diversamente in memoria
-			
-			coords[idx]=coords[idx-1]+newv[0]+newv[1]+newv[2];//effettuare questa moltiplicazione
-			
-			//posiziono c alfa usando phi(vettore angolo phi)
-			
-			v2=coords[idx]-coords[idx-1];
-			
-			v2=v2/abs(v2);
-			
-			rot=rotation(&v2,phi[i]);
-
-			newv[0]=rot[3]*dist_ca_n;
-			newv[1]=rot[4]*dist_ca_n;
-			newv[2]=rot[5]*dist_ca_n;
-			
-			//newv={0,dist_ca_n,0}*rot;//prodotto matr.//rivedere penso non corretto va acceduto diversamente in mem
-			
-			coords[idx+1]=coords[idx]+newv[0]+newv[1]+newv[2];
-		
-		
-		
-		}//if
-			
-			
-			//Posiziono c usando il vettore degli angoli psi
-			
-	 	
-	 	coords[idx+1]-coords[idx];
-			
-	 	v3=v3/abs(v3);
-			
-	 	rot=rotation(&v3,psi[i]);
-
-		newv[0]=rot[3]*dist_ca_c;
-		newv[1]=rot[4]*dist_ca_c;
-		newv[2]=rot[5]*dist_ca_c;
-
-		//newv={0,dist_ca_c,0}*rot;//rivedere 
-			
-	 	coords[idx+2]=coords[idx+1]+newv[0]+newv[1]+newv[2];
-	
-	
-	
-	}//for
-	
-	//alla fine del for li ritorno
-	
-    return coords;
-			
-	//prima di scrivere la funzione rotation, devo allocarmi in memoria un vettore axis di 3 dimensioni
-	//uso il metodo alloc matrix con una colonna
-	
-	VECTOR axis=alloc_matrix(3,1);//tre dimensioni: x,y,z quindi 3 righe una colonna per come è strutturato il metodo e 
-	//le allocazioni in memoria
-	//todo-->metterlo sopra all'inizio del metodo 
-
-
-
-}//backbone
-
-
-
-//funz rotation ok!C is FANDASTIC!!
+float rama_energy();
+//funz rotation ok!
 
 
  	MATRIX rotation(VECTOR axis,type theta){
@@ -504,6 +335,458 @@ VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
  	
  	}//rotation
 
+
+VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
+
+   // MATRIX rot=alloc_matrix(3,3);
+	int n = input->N;
+	int i,j=0;
+	
+	//mi prendo la sequenza(la dimensione) cioè N
+	
+	
+	//distanza n-calfa,calfa-c,c-N
+	
+	type dist_ca_n=1.46;
+	
+	type dist_ca_c=1.52;
+	
+	type dist_c_n=1.33;
+	
+	//angoli std del backbone
+	
+	type theta1=2.028;//theta-ca-cn
+	
+	type theta2=2.124;//theta-cn-ca
+	
+	type theta3=1.940;//theta-n-ca-c
+	
+	//ora dovrei allocare la matrice
+	
+	MATRIX coords=alloc_matrix(n*3,3);//n*3 ->righe;3 colonne
+	
+	//setto le tre coord
+	
+	coords[0]=0;
+	coords[1]=0;
+	coords[2]=0;
+
+	coords[3]=dist_ca_n;
+	coords[4]=0;
+	coords[5]=0;
+	//coords[2]=0;
+	
+	//coord vett 1
+	
+	
+//	VECTOR v1,v2,v3;
+
+	VECTOR v1 = (VECTOR)get_block(sizeof(type), 3);
+	VECTOR v2 = (VECTOR)get_block(sizeof(type), 3);
+	VECTOR v3 = (VECTOR)get_block(sizeof(type), 3);
+
+	
+	MATRIX rot;
+	
+	VECTOR newv;
+	newv = alloc_matrix(3,1);
+	//costruire la catena
+	
+	for(i=0;i<n;i++){
+	    
+		
+		int idx=i*3;//indice base ammin.
+		
+		if(i>0){
+			
+			v1[0] = coords[((idx-1)*3) + 0] - coords[((idx-2)*3) + 0]; // Componente x
+            v1[1] = coords[((idx-1)*3) + 1] - coords[((idx-2)*3) + 1]; // Componente y
+            v1[2] = coords[((idx-1)*3) + 2] - coords[((idx-2)*3) + 2]; // Componente z
+	        
+	        type norm ;
+			
+		    norm = sqrt(v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]);
+		    
+
+            for (j = 0; j < 3; j++) {
+                v1[j] /= norm;
+            }
+
+
+			
+			//calcolo v1/(|v1|)
+			
+			rot=rotation(v1,theta2);
+			
+			newv[0]=rot[3]*dist_c_n;
+			newv[1]=rot[4]*dist_c_n;
+			newv[2]=rot[5]*dist_c_n;
+
+			//newv={0,dist_c_n,0}*rot;//prod matr penso non corretto,va acceduto diversamente in memoria
+			
+			coords[(idx * 3) + 0] = coords[((idx - 1) * 3) + 0] + newv[0];
+			coords[(idx * 3) + 1] = coords[((idx - 1) * 3) + 1] + newv[1];
+			coords[(idx * 3) + 2] = coords[((idx - 1) * 3) + 2] + newv[2];
+
+
+			//posiziono c alfa usando phi(vettore angolo phi)
+		
+			v2[0] = coords[((idx)*3) + 0] - coords[((idx-1)*3) + 0]; // Componente x
+            v2[1] = coords[((idx)*3) + 1] - coords[((idx-1)*3) + 1]; // Componente y
+            v2[2] = coords[((idx)*3) + 2] - coords[((idx-1)*3) + 2]; // Componente z
+
+			
+			norm = sqrt(v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2]);
+
+            for (j = 0; j < 3; j++) {
+                v2[j] /= norm;
+            }
+			
+			rot=rotation(v2,phi[i]);
+
+			newv[0]=rot[3]*dist_ca_n;
+			newv[1]=rot[4]*dist_ca_n;
+			newv[2]=rot[5]*dist_ca_n;
+			
+			//newv={0,dist_ca_n,0}*rot;//prodotto matr.//rivedere penso non corretto va acceduto diversamente in mem
+			
+			coords[((idx + 1) * 3) + 0] = coords[(idx * 3) + 0] + newv[0];
+			coords[((idx + 1) * 3) + 1] = coords[(idx * 3) + 1] + newv[1];
+			coords[((idx + 1) * 3) + 2] = coords[(idx * 3) + 2] + newv[2];
+
+		
+		
+			 	
+
+		
+		}//if
+			
+			
+			//Posiziono c usando il vettore degli angoli psi
+			
+	 	v3[0] = coords[((idx+1)*3) + 0] - coords[((idx)*3) + 0]; // Componente x
+        v3[1] = coords[((idx+1)*3) + 1] - coords[((idx)*3) + 1]; // Componente y
+        v3[2] = coords[((idx+1)*3) + 2] - coords[((idx)*3) + 2]; // Componente z
+
+
+			
+		type norm = sqrt(v3[0] * v3[0] + v3[1] * v3[1] + v3[2] * v3[2]);
+            for (int j = 0; j < 3; j++) {
+                v3[j] /= norm;
+            }
+
+	 	rot=rotation(v3,phi[i]);
+
+		newv[0]=rot[3]*dist_ca_c;
+		newv[1]=rot[4]*dist_ca_c;
+		newv[2]=rot[5]*dist_ca_c;
+
+		//newv={0,dist_ca_c,0}*rot;//rivedere 
+		
+	    coords[((idx + 2) * 3) + 0] = coords[((idx + 1) * 3) + 0] + newv[0];
+		coords[((idx + 2) * 3) + 1] = coords[((idx + 1) * 3) + 1] + newv[1];
+		coords[((idx + 2) * 3) + 2] = coords[((idx + 1) * 3) + 2] + newv[2];
+
+	
+	
+	    
+	
+	}//for
+	
+    free_block(newv);
+	free_block(v1);
+	free_block(v2);
+	free_block(v3);
+
+    return coords;
+}//backbone
+
+
+
+//sottofunzioni di energy
+
+float rama_energy(params* input,VECTOR phi,VECTOR psi){
+
+	int i;
+
+	int n=input->N;//lunghezza
+
+	float alfa_phi=-57.8;
+
+	float alfa_psi=-47.0;
+
+	float beta_phi=-119.0;
+
+	float beta_psi=113.0;
+
+	float energy=0;
+
+	for(i=0;i<n;i++){
+
+		float alfa_dist=sqrt( ( (phi[i]-alfa_phi)*(phi[i]-alfa_phi) )+( (psi[i]-alfa_psi)*(psi[i]-alfa_psi) ) );
+
+		float beta_dist=sqrt( ( (phi[i]-beta_phi)*(phi[i]-beta_phi) )+( (psi[i]-beta_psi)*(psi[i]-beta_psi) ) );
+
+		energy+=0.5*MIN(alfa_dist,beta_dist); 
+
+
+	}//for
+
+return energy;
+
+}//rama
+
+
+//funz. hydro energy
+
+
+float hydrophobic_energy(params* input, VECTOR ca_coords){
+
+	char* se=input->seq;
+
+	int si,sj;
+
+	int n=input->N;
+
+	int i,j=0;
+
+	int k=0;
+
+	float energy=0;
+	
+	
+
+	for(i=0;i<n-3;i++){//MESSO A N-1  
+		
+		for(j=i+3;j<n-3;j++){
+		    
+		    float dist = sqrt( ( (ca_coords[i*3+0]-ca_coords[j*3+0]) * (ca_coords[i*3+0]-ca_coords[j*3+0])) +
+		    ((ca_coords[i*3+1]-ca_coords[j*3+1]) * (ca_coords[i*3+1]-ca_coords[j*3+1])) +
+		    ((ca_coords[i*3+2]-ca_coords[j*3+2]) * (ca_coords[i*3+2]-ca_coords[j*3+2]))
+		    );
+		//	float dist=abs(ca_coords[i]-ca_coords[j]);
+			//usando la formula di dist. euclidea consideriamo solo i valori coords_alfa[i] e coords_alfa[j]
+			//e facciamo il modulo direttamente usando la formula senza fare la radice della differenza dei quadrati
+
+			if(dist<10.0){
+
+				si=(int)se[i]-65;
+
+				sj=(int)se[j]-65;
+
+				//valore ascii convertito per prendere le posizioni relative agli amminoacidi
+
+				//65 lettera A
+				if (hydrophobicity[si] != -1 && hydrophobicity[sj] != -1) {
+
+				    energy+=(hydrophobicity[si]*hydrophobicity[sj])/dist;
+				}
+			}//if
+
+		
+		}//for
+	
+	
+	}//for
+
+	
+
+return energy;
+
+}//hydro
+
+
+
+float elecrostatic_energy(params* input,VECTOR ca_coords){
+
+	char* se=input->seq;
+
+	int si,sj;
+
+	int n=input->N;
+
+	int i,j=0;
+
+	int k=0;
+
+	float energy=0;
+	
+	
+	
+	for(i=0;i<n-3;i++){//MESSO A N-1  
+		
+		for(j=i+3;j<n-3;j++){
+		    
+		    
+		    float dist = sqrt( ( (ca_coords[i*3+0]-ca_coords[j*3+0]) * (ca_coords[i*3+0]-ca_coords[j*3+0])) +
+		    ((ca_coords[i*3+1]-ca_coords[j*3+1]) * (ca_coords[i*3+1]-ca_coords[j*3+1])) +
+		    ((ca_coords[i*3+2]-ca_coords[j*3+2]) * (ca_coords[i*3+2]-ca_coords[j*3+2]))
+		    );
+
+			//float dist=abs(ca_coords[i]-ca_coords[j]);
+			//usando la formula di dist. euclidea consideriamo solo i valori coords_alfa[i] e coords_alfa[j]
+			//e facciamo il modulo direttamente usando la formula senza fare la radice della differenza dei quadrati
+				si=(int)se[i]-65;
+
+				sj=(int)se[j]-65;
+
+            //if (charge[si] == -1 || charge[sj] == -1) break;
+
+			if(dist<10.0 && charge[si]!=0 && charge[sj]!=0 && charge[si] != -1 && charge[sj] != -1){
+
+				energy+=charge[si]*charge[sj]/(dist*4.0);
+
+			}//if	
+
+				//valore ascii convertito per prendere le posizioni relative agli amminoacidi
+
+				//65 lettera A
+
+
+		
+		}//for
+	
+
+
+	}//for
+
+
+return energy;
+
+}//electr
+
+//portare dentro energy vettore da riutilizzare
+
+
+
+float packing_energy(params* input,VECTOR ca_coords){
+
+	char* se=input->seq;
+
+	int si,sj;
+
+	int n=input->N;
+
+	int i,j=0;
+
+	int k=0;
+
+	float energy=0;
+	
+	
+
+	for(i=0;i<n-3;i++){//MESSO A N-1  
+
+		int density=0;
+		
+		for(j=0;j<n-3;j++){
+
+    
+    
+            float dist = sqrt( ( (ca_coords[i*3+0]-ca_coords[j*3+0]) * (ca_coords[i*3+0]-ca_coords[j*3+0])) +
+		    ((ca_coords[i*3+1]-ca_coords[j*3+1]) * (ca_coords[i*3+1]-ca_coords[j*3+1])) +
+		    ((ca_coords[i*3+2]-ca_coords[j*3+2]) * (ca_coords[i*3+2]-ca_coords[j*3+2]))
+		    );
+
+
+			//float dist=abs(ca_coords[i]-ca_coords[j]);
+			//usando la formula di dist. euclidea consideriamo solo i valori coords_alfa[i] e coords_alfa[j]
+			//e facciamo il modulo direttamente usando la formula senza fare la radice della differenza dei quadrati
+			si=(int)se[i]-65;
+
+			sj=(int)se[j]-65;
+
+
+            //if (volume[si] == -1 || volume[sj] == -1) break;
+
+			if(i != j && dist<10.0 && volume[si] != -1 && volume[sj] != -1 ){
+
+				density+=(volume[sj])/(dist*dist*dist);
+
+			}//if	
+
+				//valore ascii convertito per prendere le posizioni relative agli amminoacidi
+
+				//65 lettera A
+
+
+		
+		}//for
+
+		energy+=( (volume[si]-density) *  (volume[si]-density) );
+	
+
+
+	}//for
+
+
+return energy;
+
+
+
+}//pack
+
+
+float energy(params* input,VECTOR phi,VECTOR psi){
+
+	MATRIX coords=backbone(input,phi,psi); 
+
+	int n = input->N;
+	VECTOR ca_coords=(VECTOR)get_block(sizeof(type),n*3);//dim n
+
+
+    int i;
+
+    for (i = 0; i < n; i++) { // Itera per tutti i residui
+        
+        ca_coords[i * 3 + 0] = coords[(i * 3 + 1) * 3 + 0]; // x del Cα
+        ca_coords[i * 3 + 1] = coords[(i * 3 + 1) * 3 + 1]; // y del Cα
+        ca_coords[i * 3 + 2] = coords[(i * 3 + 1) * 3 + 2]; // z del Cα
+    }
+
+
+
+
+
+
+	//richiamo sottofunzioni
+
+
+	float rama=rama_energy(input,phi,psi);
+
+	float hydro=hydrophobic_energy(input,ca_coords);
+
+	float elec=elecrostatic_energy(input,ca_coords);
+
+	float pack=packing_energy(input,ca_coords);
+
+	//pesi per i contributi
+
+
+	float omega_rama=1.0;
+
+
+	float omega_hydro=0.5;
+
+
+
+	float omega_elec=0.2;
+
+
+	float omega_pack=0.3;
+
+	float total_energy=omega_rama*rama + omega_hydro*hydro + omega_elec*elec + omega_pack*pack;
+
+	free_block(ca_coords);
+
+	free_block(coords);
+
+return total_energy;
+
+
+}//energy
+
+
 //fine rotation
 
 void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
@@ -516,6 +799,7 @@ void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
 	
 	
 }//fine_pst
+
 
 int main(int argc, char** argv) {
 	char fname_phi[256];
