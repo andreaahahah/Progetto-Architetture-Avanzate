@@ -727,8 +727,10 @@ return energy;
 }//pack
 
 
-float energy(params* input,VECTOR phi,VECTOR psi){
+float energy(params* input){
 
+	VECTOR phi= input->phi;	
+	VECTOR psi= input->psi;
 	MATRIX coords=backbone(input,phi,psi); 
 
 	int n = input->N;
@@ -792,11 +794,60 @@ return total_energy;
 void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
 	//da qui inserire poi definizione funzione backbone
 	
+	char* s = input->seq;
+ 	int n = input->N;
+	type T0 = input->to;
+	type T = T0;
+	type alpha = input->alpha;
+	type k = input->k;
+
+	VECTOR phi= input->phi;	
+	VECTOR psi= input->psi;
 	
- 	
+	//inizializzarli random 
+	int i;
+	for(i=0; i<n;i++){
+		phi[i]=(random()*2 * M_PI) - M_PI;
+		psi[i]=(random()*2 * M_PI) - M_PI;
+	}
 	
-	
-	
+	float e = energy(input);
+	int t = 0;
+
+	while(T>0){
+		i=0;
+		i=(int)(random() * (n+1));
+
+		type y_phi = (random()*2 * M_PI) - M_PI;
+		phi[i]+=y_phi;
+
+		type y_psi = (random()*2 * M_PI) - M_PI;
+		psi[i]+=y_psi;
+
+		float newE = energy(input);
+
+		type delta = newE-e;
+
+		if(delta<=0){
+			e = newE;
+		}
+		else{
+			type P = exp(-delta/(k*T));
+			type r = random();
+
+			if(r<=P){
+				e = newE;
+			}
+			else{
+				phi[i]-=y_phi;
+				psi[i]-=y_psi;
+			}
+		}
+
+		t +=1;
+		T = T0 -sqrt(alpha*t);//da controllare
+
+	}
 	
 }//fine_pst
 
