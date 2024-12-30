@@ -254,11 +254,15 @@ float rama_energy();
 //funz rotation ok!
 
 
- 	MATRIX rotation(VECTOR axis,type theta){
+MATRIX rotation(VECTOR axis,type theta){
  		
  		//normalizz.vett.
  		//il prod.scalare è stato realizzato all'interno della normalizzazione
  		
+       // printf("axis[0]= %f\n", axis[0]);
+        //printf("axis[1]= %f\n", axis[1]);
+      //  printf("axis[2]= %f\n", axis[2]);
+
  		type norm=sqrt(axis[0]*axis[0]+axis[1]*axis[1]+axis[2]*axis[2]);
  		
  		
@@ -269,6 +273,7 @@ float rama_energy();
  		for (int i=0;i<3;i++){
  		
  			assi_norm[i]=axis[i]/norm;
+            //printf("assi_norm [%d] = %f\n", i, assi_norm[i]);
  		}//for
  		
  		
@@ -277,12 +282,17 @@ float rama_energy();
  		//usiamo le approssimazioni per calc.i coefficenti
  		
  		type half_theta=theta/2.0;
- 		
- 		type cos_t=1-(half_theta*half_theta)/2 + (half_theta*half_theta*half_theta*half_theta)/24-(half_theta*half_theta*half_theta*half_theta*half_theta*half_theta)/720;//appr.cos
+        
+        //printf("half_theta = %f \n", half_theta); 		
+
+ 		//type cos_t=1-(((half_theta*half_theta)/2) + ((half_theta*half_theta*half_theta*half_theta)/24)-((half_theta*half_theta*half_theta*half_theta*half_theta*half_theta)/720));//appr.cos
 		
 		
-		type sen_t=half_theta-(half_theta*half_theta*half_theta)/6+(half_theta*half_theta*half_theta*half_theta*half_theta)/120-(half_theta*half_theta*half_theta*half_theta*half_theta*half_theta*half_theta)/5040;
+		//type sen_t=half_theta-(((half_theta*half_theta*half_theta)/6)+((half_theta*half_theta*half_theta*half_theta*half_theta)/120)-((half_theta*half_theta*half_theta*half_theta*half_theta*half_theta*half_theta)/5040));
 		
+        type cos_t = cos(half_theta);
+        type sen_t = sin(half_theta);
+
 		type a=cos_t;
 		
 		//definiamo b,c,d
@@ -293,6 +303,14 @@ float rama_energy();
 		
 		type d= -assi_norm[2]*sen_t;
 		
+
+      /*  printf("a = %f \n", a);
+        printf("b = %f \n", b);
+        printf("c = %f \n", c);
+        printf("d = %f \n", d);
+        printf("sen_t = %f\n", sen_t);
+        printf("cos_t = %f\n", cos_t);
+        */
 		//allochiamo la matrice
 		
 		MATRIX rot_matrix=alloc_matrix(3,3);
@@ -324,6 +342,10 @@ float rama_energy();
 		rot_matrix[8]=qa+qd-qb-qc;
 		
 		//liberiamo lo spazio allocato
+        int i;
+        /*for (i=0; i< 9; i++){
+            printf("rot_matrix[%d] = %f \n", i, rot_matrix[i]);
+        }*/
 		
 		free_block(assi_norm);
 		
@@ -360,6 +382,8 @@ VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
 	type theta2=2.124;//theta-cn-ca
 	
 	type theta3=1.940;//theta-n-ca-c
+    
+    
 	
 	//ora dovrei allocare la matrice
 	
@@ -394,8 +418,7 @@ VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
 	
 	for(i=0;i<n;i++){
 	    
-		
-		int idx=i*3;//indice base ammin.
+ 		int idx=i*3;//indice base ammin.
 		
 		if(i>0){
 			
@@ -403,6 +426,8 @@ VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
             v1[1] = coords[((idx-1)*3) + 1] - coords[((idx-2)*3) + 1]; // Componente y
             v1[2] = coords[((idx-1)*3) + 2] - coords[((idx-2)*3) + 2]; // Componente z
 	        
+
+
 	        type norm ;
 			
 		    norm = sqrt(v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]);
@@ -422,6 +447,7 @@ VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
 			newv[1]=rot[4]*dist_c_n;
 			newv[2]=rot[5]*dist_c_n;
 
+//            printf("newv dopo v1 newv[0] = %f, newv[1]=%f, newv[2]=%f\n", newv[0], newv[1], newv[2]);
 			//newv={0,dist_c_n,0}*rot;//prod matr penso non corretto,va acceduto diversamente in memoria
 			
 			coords[(idx * 3) + 0] = coords[((idx - 1) * 3) + 0] + newv[0];
@@ -434,7 +460,8 @@ VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
 			v2[0] = coords[((idx)*3) + 0] - coords[((idx-1)*3) + 0]; // Componente x
             v2[1] = coords[((idx)*3) + 1] - coords[((idx-1)*3) + 1]; // Componente y
             v2[2] = coords[((idx)*3) + 2] - coords[((idx-1)*3) + 2]; // Componente z
-
+            
+           // printf("newv dopo v2 newv[0] = %f, newv[1]=%f, newv[2]=%f\n", newv[0], newv[1], newv[2]);
 			
 			norm = sqrt(v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2]);
 
@@ -447,6 +474,8 @@ VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
 			newv[0]=rot[3]*dist_ca_n;
 			newv[1]=rot[4]*dist_ca_n;
 			newv[2]=rot[5]*dist_ca_n;
+            
+         //   printf("newv dopo v3 newv[0] = %f, newv[1]=%f, newv[2]=%f\n", newv[0], newv[1], newv[2]);
 			
 			//newv={0,dist_ca_n,0}*rot;//prodotto matr.//rivedere penso non corretto va acceduto diversamente in mem
 			
@@ -454,7 +483,7 @@ VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
 			coords[((idx + 1) * 3) + 1] = coords[(idx * 3) + 1] + newv[1];
 			coords[((idx + 1) * 3) + 2] = coords[(idx * 3) + 2] + newv[2];
 
-		
+		    
 		
 			 	
 
@@ -492,7 +521,12 @@ VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
 	    
 	
 	}//for
-	
+    /*
+    for (int i=0; i<n*3; i++){
+        printf("coords[%d] = %f \n", i,coords[i]);
+    }   
+*/
+
     free_block(newv);
 	free_block(v1);
 	free_block(v2);
@@ -556,9 +590,9 @@ float hydrophobic_energy(params* input, VECTOR ca_coords){
 	
 	
 
-	for(i=0;i<n-3;i++){//MESSO A N-1  
+	for(i=0;i<n-1;i++){//MESSO A N-1  
 		
-		for(j=i+3;j<n-3;j++){
+		for(j=i+1;j<n;j++){
 		    
 		    float dist = sqrt( ( (ca_coords[i*3+0]-ca_coords[j*3+0]) * (ca_coords[i*3+0]-ca_coords[j*3+0])) +
 		    ((ca_coords[i*3+1]-ca_coords[j*3+1]) * (ca_coords[i*3+1]-ca_coords[j*3+1])) +
@@ -613,15 +647,17 @@ float elecrostatic_energy(params* input,VECTOR ca_coords){
 	
 	
 	
-	for(i=0;i<n-3;i++){//MESSO A N-1  
+	for(i=0;i<n-1;i++){//MESSO A N-1  
 		
-		for(j=i+3;j<n-3;j++){
+		for(j=i+1;j<n;j++){
 		    
 		    
 		    float dist = sqrt( ( (ca_coords[i*3+0]-ca_coords[j*3+0]) * (ca_coords[i*3+0]-ca_coords[j*3+0])) +
 		    ((ca_coords[i*3+1]-ca_coords[j*3+1]) * (ca_coords[i*3+1]-ca_coords[j*3+1])) +
 		    ((ca_coords[i*3+2]-ca_coords[j*3+2]) * (ca_coords[i*3+2]-ca_coords[j*3+2]))
 		    );
+            
+           // printf("dist = %f\n", dist);
 
 			//float dist=abs(ca_coords[i]-ca_coords[j]);
 			//usando la formula di dist. euclidea consideriamo solo i valori coords_alfa[i] e coords_alfa[j]
@@ -629,12 +665,15 @@ float elecrostatic_energy(params* input,VECTOR ca_coords){
 				si=(int)se[i]-65;
 
 				sj=(int)se[j]-65;
+           // printf("si = %d\n", si);
+//            printf("sj = %d\n", sj);
 
             //if (charge[si] == -1 || charge[sj] == -1) break;
 
 			if(dist<10.0 && charge[si]!=0 && charge[sj]!=0 && charge[si] != -1 && charge[sj] != -1){
 
 				energy+=charge[si]*charge[sj]/(dist*4.0);
+              //  printf("charge[%d] = %f", si, charge[si]);
 
 			}//if	
 
@@ -675,11 +714,11 @@ float packing_energy(params* input,VECTOR ca_coords){
 	
 	
 
-	for(i=0;i<n-3;i++){//MESSO A N-1  
+	for(i=0;i<n;i++){//MESSO A N-1  
 
 		int density=0;
 		
-		for(j=0;j<n-3;j++){
+		for(j=0;j<n;j++){
 
     
     
@@ -744,9 +783,14 @@ float energy(params* input){
         ca_coords[i * 3 + 0] = coords[(i * 3 + 1) * 3 + 0]; // x del Cα
         ca_coords[i * 3 + 1] = coords[(i * 3 + 1) * 3 + 1]; // y del Cα
         ca_coords[i * 3 + 2] = coords[(i * 3 + 1) * 3 + 2]; // z del Cα
+       
     }
-
-
+    
+    
+  /*  for(i=0; i<n; i++){
+        printf("ca_coords[%d] = %f \n", i, ca_coords[i]);
+    }  */
+    
 
 
 
@@ -779,6 +823,9 @@ float energy(params* input){
 
 	float total_energy=omega_rama*rama + omega_hydro*hydro + omega_elec*elec + omega_pack*pack;
 
+    //printf("Energie rama = %f , hydro = %f, elec = %f, pack = %f \n", rama, hydro, elec, pack);
+    //printf("total energy = %f\n", total_energy);
+    
 	free_block(ca_coords);
 
 	free_block(coords);
@@ -809,8 +856,11 @@ void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
 	for(i=0; i<n;i++){
 		phi[i]=(random()*2 * M_PI) - M_PI;
 		psi[i]=(random()*2 * M_PI) - M_PI;
+      //  printf("psi[%d] = %f", i,psi[i]);
+     //   printf("phi[%d] = %f", i,phi[i]);
 	}
-	
+   
+
 	float e = energy(input);
 	int t = 0;
 
@@ -837,7 +887,9 @@ void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
 
 			if(r<=P){
 				e = newE;
+                
 			}
+            
 			else{
 				phi[i]-=y_phi;
 				psi[i]-=y_psi;
@@ -845,8 +897,9 @@ void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
 		}
 
 		t +=1;
-		T = T0 -sqrt(alpha*t);//da controllare
+		T = T0 - sqrt(alpha*t);//da controllare
 
+    printf("energy = %f\n", e);
 	}
 	
 }//fine_pst
