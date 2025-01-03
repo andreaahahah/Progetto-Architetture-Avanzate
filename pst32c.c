@@ -856,8 +856,8 @@ void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
 	for(i=0; i<n;i++){
 		phi[i]=(random()*2 * M_PI) - M_PI;
 		psi[i]=(random()*2 * M_PI) - M_PI;
-      //  printf("psi[%d] = %f", i,psi[i]);
-     //   printf("phi[%d] = %f", i,phi[i]);
+       // printf("psi[%d] = %f\n", i,psi[i]);
+      //  printf("phi[%d] = %f\n", i,phi[i]);
 	}
    
 
@@ -869,10 +869,26 @@ void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
 		i=(int)(random() * (n+1));
 
 		type y_phi = (random()*2 * M_PI) - M_PI;
+        
 		phi[i]+=y_phi;
 
 		type y_psi = (random()*2 * M_PI) - M_PI;
 		psi[i]+=y_psi;
+
+        while(phi[i] > M_PI){
+            phi[i]-= 2.0*M_PI;        
+        }
+        while(psi[i] > M_PI){
+            psi[i]-= 2.0*M_PI;        
+        }
+        while(phi[i] < -M_PI){
+            phi[i]+= 2.0*M_PI;        
+        }
+        while(psi[i] < -M_PI){
+            psi[i]+= 2.0*M_PI;        
+        }
+        //printf("psi[%d] = %f\n", i,psi[i]);
+       // printf("phi[%d] = %f\n", i,phi[i]);
 
 		float newE = energy(input);
 
@@ -893,15 +909,27 @@ void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
 			else{
 				phi[i]-=y_phi;
 				psi[i]-=y_psi;
+                while(phi[i] > M_PI){
+                    phi[i]-= 2.0*M_PI;        
+                }
+                while(psi[i] > M_PI){
+                    psi[i]-= 2.0*M_PI;        
+                }
+                while(phi[i] < -M_PI){
+                    phi[i]+= 2.0*M_PI;        
+                }
+                while(psi[i] < -M_PI){
+                    psi[i]+= 2.0*M_PI;        
+                }
 			}
 		}
 
 		t +=1;
 		T = T0 - sqrt(alpha*t);//da controllare
 
-    printf("energy = %f\n", e);
+   
 	}
-	
+	 printf("energy = %f\n", e);
 }//fine_pst
 
 
