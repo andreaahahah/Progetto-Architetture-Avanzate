@@ -30,3 +30,8 @@ e packing un valore molto alto
 abbiamo ristretto il problema al fatto di come prendevamo i valori ascii relativi alla posizione degli amminoacidi nella sequenza,quindi abbiamo provato a ristampare e alcuni valori comunque non rientrano nel range 
 ora le prime tre energie comprese elec sembrano essere corrette, ma packing stampa sempre valori molto alti ;
 abbiamo controllato il simulated annealing e sembra che arriviamo ad un minimo globale quindi sembra corretta
+
+
+03/01
+
+Risolto il probelma degli angoli facendo la normalizzazione;ora il range degli angoli sembra essere corretto.
