@@ -34,4 +34,29 @@ abbiamo controllato il simulated annealing e sembra che arriviamo ad un minimo g
 
 03/01
 
+
+
 Risolto il probelma degli angoli facendo la normalizzazione;ora il range degli angoli sembra essere corretto.
+
+
+
+10/01
+  *********************************************************************************************************************************************************************
+effettuato ricevimento dal prof;
+primo problema risolto;doppia generaziome casuale degli angoli phi e psi fatti già da prima da gen_rnd_mat che andava a sovrapporre i vecchi valori ed aggiornarli con altri senza trovarsi
+secondo problema risolto:nella funzione rotation è stata tolta sqrt perchè è solo un prodotto scalare senza normalizzazione
+terzo problema da aggiustare:
+le norme in backbone di v1 v2 e v3 vanno fatte fuori dal for e non dentro il for;
+
+**********************************************************************************************************************************************************************
+correzioni da fare
+
+aggiustare norma che va messa fuori dal for in backbone sia in v1 v2 e v3
+togliere le print e le exit 0 rimaste
+confrontare ris phi e psi
+confrontare energie del prof e nostre
+valori energie dei prof------->
+
+rama_e: 9538.258065, hydro_e: 98.171527, elec_e: -0.540941, pack_e: 36599998.039925
+ENERGIA INIZIALE: 10989586.647618
+-------------------------------------->
