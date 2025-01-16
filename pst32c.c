@@ -9,7 +9,7 @@
 #include <xmmintrin.h>
 
 #define _USE_MATH_DEFINES
-#define	type		float
+#define	type		double
 #define	MATRIX		type*
 #define	VECTOR		type*
 
@@ -43,9 +43,9 @@ params myParams;
 /*
 * 
 *	Le funzioni sono state scritte assumento che le matrici siano memorizzate 
-* 	mediante un array (float*), in modo da occupare un unico blocco
+* 	mediante un array (type*), in modo da occupare un unico blocco
 * 	di memoria, ma a scelta del candidato possono essere 
-* 	memorizzate mediante array di array (float**).
+* 	memorizzate mediante array di array (type**).
 * 
 * 	In entrambi i casi il candidato dovr  inoltre scegliere se memorizzare le
 * 	matrici per righe (row-major order) o per colonne (column major-order).
@@ -89,7 +89,7 @@ void dealloc_matrix(void* mat) {
 * 	Codifica del file:
 * 	primi 4 byte: numero di righe (N) --> numero intero
 * 	successivi 4 byte: numero di colonne (M) --> numero intero
-* 	successivi N*M*4 byte: matrix data in row-major order --> numeri floating-point a precisione singola
+* 	successivi N*M*4 byte: matrix data in row-major order --> numeri typeing-point a precisione singola
 * 
 *****************************************************************************
 *	Se lo si ritiene opportuno,   possibile cambiare la codifica in memoria
@@ -175,7 +175,7 @@ char* load_seq(char* filename, int *n, int *k) {
 * 	Codifica del file:
 * 	primi 4 byte: numero di righe (N) --> numero intero a 32 bit
 * 	successivi 4 byte: numero di colonne (M) --> numero intero a 32 bit
-* 	successivi N*M*4 byte: matrix data in row-major order --> numeri interi o floating-point a precisione singola
+* 	successivi N*M*4 byte: matrix data in row-major order --> numeri interi o typeing-point a precisione singola
 */
 void save_data(char* filename, void* X, int n, int k) {
 	FILE* fp;
@@ -207,7 +207,7 @@ void save_data(char* filename, void* X, int n, int k) {
 * 	Codifica del file:
 * 	primi 4 byte: contenenti l'intero 1 		--> numero intero a 32 bit
 * 	successivi 4 byte: numero di elementi k     --> numero intero a 32 bit
-* 	successivi byte: elementi del vettore 		--> k numero floating-point a precisione singola
+* 	successivi byte: elementi del vettore 		--> k numero typeing-point a precisione singola
 */
 void save_out(char* filename, MATRIX X, int k) {
 	FILE* fp;
@@ -250,67 +250,38 @@ extern void prova(params* input);
 
 VECTOR backbone();
 
-float rama_energy();
+type rama_energy();
 //funz rotation ok!
 
 
 MATRIX rotation(VECTOR axis,type theta){
- 		
- 		//normalizz.vett.
- 		//il prod.scalare è stato realizzato all'interno della normalizzazione
- 		
-       // printf("axis[0]= %f\n", axis[0]);
-        //printf("axis[1]= %f\n", axis[1]);
-      //  printf("axis[2]= %f\n", axis[2]);
 
- 		type norm=sqrt(axis[0]*axis[0]+axis[1]*axis[1]+axis[2]*axis[2]);
- 		
- 		
- 		VECTOR assi_norm=(VECTOR)get_block(sizeof(type),3);
+ 		type norm=(axis[0]*axis[0]+axis[1]*axis[1]+axis[2]*axis[2]);
  		
  		//fase di normalizzazione
  		
  		for (int i=0;i<3;i++){
  		
- 			assi_norm[i]=axis[i]/norm;
-            //printf("assi_norm [%d] = %f\n", i, assi_norm[i]);
+ 			axis[i]=axis[i]/norm;
+           
  		}//for
- 		
- 		
- 	
- 	
- 		//usiamo le approssimazioni per calc.i coefficenti
  		
  		type half_theta=theta/2.0;
         
-        //printf("half_theta = %f \n", half_theta); 		
-
- 		//type cos_t=1-(((half_theta*half_theta)/2) + ((half_theta*half_theta*half_theta*half_theta)/24)-((half_theta*half_theta*half_theta*half_theta*half_theta*half_theta)/720));//appr.cos
+ 		type cos_t=1-((half_theta*half_theta)/2) + ((half_theta*half_theta*half_theta*half_theta)/24)-((half_theta*half_theta*half_theta*half_theta*half_theta*half_theta)/720);//appr.cos
 		
 		
-		//type sen_t=half_theta-(((half_theta*half_theta*half_theta)/6)+((half_theta*half_theta*half_theta*half_theta*half_theta)/120)-((half_theta*half_theta*half_theta*half_theta*half_theta*half_theta*half_theta)/5040));
+		type sen_t=half_theta-((half_theta*half_theta*half_theta)/6)+((half_theta*half_theta*half_theta*half_theta*half_theta)/120)-((half_theta*half_theta*half_theta*half_theta*half_theta*half_theta*half_theta)/5040);
 		
-        type cos_t = cos(half_theta);
-        type sen_t = sin(half_theta);
-
 		type a=cos_t;
 		
-		//definiamo b,c,d
+		type b= -axis[0]*sen_t;
 		
-		type b= -assi_norm[0]*sen_t;
+		type c= -axis[1]*sen_t;
 		
-		type c= -assi_norm[1]*sen_t;
-		
-		type d= -assi_norm[2]*sen_t;
+		type d= -axis[2]*sen_t;
 		
 
-      /*  printf("a = %f \n", a);
-        printf("b = %f \n", b);
-        printf("c = %f \n", c);
-        printf("d = %f \n", d);
-        printf("sen_t = %f\n", sen_t);
-        printf("cos_t = %f\n", cos_t);
-        */
 		//allochiamo la matrice
 		
 		MATRIX rot_matrix=alloc_matrix(3,3);
@@ -343,17 +314,9 @@ MATRIX rotation(VECTOR axis,type theta){
 		
 		//liberiamo lo spazio allocato
         int i;
-        /*for (i=0; i< 9; i++){
-            printf("rot_matrix[%d] = %f \n", i, rot_matrix[i]);
-        }*/
-		
-		free_block(assi_norm);
-		
+        
 	return rot_matrix;
- 		
- 		
- 		
- 		
+ 			
  	
  	}//rotation
 
@@ -413,7 +376,7 @@ VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
 	MATRIX rot;
 	
 	VECTOR newv;
-	newv = alloc_matrix(3,1);
+	newv = alloc_matrix(1,3);
 	//costruire la catena
 	
 	for(i=0;i<n;i++){
@@ -423,26 +386,32 @@ VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
 		if(i>0){
 			
 			v1[0] = coords[((idx-1)*3) + 0] - coords[((idx-2)*3) + 0]; // Componente x
-            v1[1] = coords[((idx-1)*3) + 1] - coords[((idx-2)*3) + 1]; // Componente y
-            v1[2] = coords[((idx-1)*3) + 2] - coords[((idx-2)*3) + 2]; // Componente z
+            		v1[1] = coords[((idx-1)*3) + 1] - coords[((idx-2)*3) + 1]; // Componente y
+            		v1[2] = coords[((idx-1)*3) + 2] - coords[((idx-2)*3) + 2]; // Componente z
 	        
 
 
-	        type norm ;
+	        //type norm ;
 			
-		    norm = sqrt(v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]);
-		    
+		   type norm = sqrt(v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]);
+		    //printf("v1 = %f, %f, %f, theta2= %f\n", v1[0], v1[1], v1[2],theta2);
+
+            //printf("norm = %f %f",v1[1], v1[1] * v1[1]);
+
+            //type norm = sqrt(v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]);
 
             for (j = 0; j < 3; j++) {
                 v1[j] /= norm;
             }
-
-
+		   // printf("v1 = %f, %f, %f, theta2= %f, norm: %f\n", v1[0], v1[1], v1[2],theta2, norm);
 			
 			//calcolo v1/(|v1|)
 			
 			rot=rotation(v1,theta2);
 			
+            
+        
+            //exit(0);
 			newv[0]=rot[3]*dist_c_n;
 			newv[1]=rot[4]*dist_c_n;
 			newv[2]=rot[5]*dist_c_n;
@@ -451,22 +420,26 @@ VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
 			//newv={0,dist_c_n,0}*rot;//prod matr penso non corretto,va acceduto diversamente in memoria
 			
 			coords[(idx * 3) + 0] = coords[((idx - 1) * 3) + 0] + newv[0];
-			coords[(idx * 3) + 1] = coords[((idx - 1) * 3) + 1] + newv[1];
+            //printf("coords [%i] = %f , %f,  %f \n", idx * 3,coords[(idx * 3) + 0] , coords[((idx - 1) * 3) + 0] ,newv[0]);
+            
+            //exit(0);			
+            		coords[(idx * 3) + 1] = coords[((idx - 1) * 3) + 1] + newv[1];
 			coords[(idx * 3) + 2] = coords[((idx - 1) * 3) + 2] + newv[2];
 
 
 			//posiziono c alfa usando phi(vettore angolo phi)
 		
 			v2[0] = coords[((idx)*3) + 0] - coords[((idx-1)*3) + 0]; // Componente x
-            v2[1] = coords[((idx)*3) + 1] - coords[((idx-1)*3) + 1]; // Componente y
-            v2[2] = coords[((idx)*3) + 2] - coords[((idx-1)*3) + 2]; // Componente z
+            		v2[1] = coords[((idx)*3) + 1] - coords[((idx-1)*3) + 1]; // Componente y
+            		v2[2] = coords[((idx)*3) + 2] - coords[((idx-1)*3) + 2]; // Componente z
             
            // printf("newv dopo v2 newv[0] = %f, newv[1]=%f, newv[2]=%f\n", newv[0], newv[1], newv[2]);
 			
 			norm = sqrt(v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2]);
 
             for (j = 0; j < 3; j++) {
-                v2[j] /= norm;
+                //v2[j] /= (sqrt(v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2]));
+                v2[j]/=norm;
             }
 			
 			rot=rotation(v2,phi[i]);
@@ -477,7 +450,7 @@ VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
             
          //   printf("newv dopo v3 newv[0] = %f, newv[1]=%f, newv[2]=%f\n", newv[0], newv[1], newv[2]);
 			
-			//newv={0,dist_ca_n,0}*rot;//prodotto matr.//rivedere penso non corretto va acceduto diversamente in mem
+
 			
 			coords[((idx + 1) * 3) + 0] = coords[(idx * 3) + 0] + newv[0];
 			coords[((idx + 1) * 3) + 1] = coords[(idx * 3) + 1] + newv[1];
@@ -494,25 +467,25 @@ VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
 			//Posiziono c usando il vettore degli angoli psi
 			
 	 	v3[0] = coords[((idx+1)*3) + 0] - coords[((idx)*3) + 0]; // Componente x
-        v3[1] = coords[((idx+1)*3) + 1] - coords[((idx)*3) + 1]; // Componente y
-        v3[2] = coords[((idx+1)*3) + 2] - coords[((idx)*3) + 2]; // Componente z
+        		v3[1] = coords[((idx+1)*3) + 1] - coords[((idx)*3) + 1]; // Componente y
+        		v3[2] = coords[((idx+1)*3) + 2] - coords[((idx)*3) + 2]; // Componente z
 
-
-			
+      
 		type norm = sqrt(v3[0] * v3[0] + v3[1] * v3[1] + v3[2] * v3[2]);
             for (int j = 0; j < 3; j++) {
-                v3[j] /= norm;
+                //v3[j] /= (sqrt(v3[0] * v3[0] + v3[1] * v3[1] + v3[2] * v3[2]));
+                v3[j]/=norm;
             }
 
-	 	rot=rotation(v3,phi[i]);
+	 	rot=rotation(v3,psi[i]);
 
+
+		
 		newv[0]=rot[3]*dist_ca_c;
 		newv[1]=rot[4]*dist_ca_c;
 		newv[2]=rot[5]*dist_ca_c;
-
-		//newv={0,dist_ca_c,0}*rot;//rivedere 
-		
-	    coords[((idx + 2) * 3) + 0] = coords[((idx + 1) * 3) + 0] + newv[0];
+       
+	   	 coords[((idx + 2) * 3) + 0] = coords[((idx + 1) * 3) + 0] + newv[0];
 		coords[((idx + 2) * 3) + 1] = coords[((idx + 1) * 3) + 1] + newv[1];
 		coords[((idx + 2) * 3) + 2] = coords[((idx + 1) * 3) + 2] + newv[2];
 
@@ -539,27 +512,27 @@ VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
 
 //sottofunzioni di energy
 
-float rama_energy(params* input,VECTOR phi,VECTOR psi){
+type rama_energy(params* input,VECTOR phi,VECTOR psi){
 
 	int i;
 
 	int n=input->N;//lunghezza
 
-	float alfa_phi=-57.8;
+	type alfa_phi=-57.8;
 
-	float alfa_psi=-47.0;
+	type alfa_psi=-47.0;
 
-	float beta_phi=-119.0;
+	type beta_phi=-119.0;
 
-	float beta_psi=113.0;
+	type beta_psi=113.0;
 
-	float energy=0;
+	type energy=0;
 
 	for(i=0;i<n;i++){
 
-		float alfa_dist=sqrt( ( (phi[i]-alfa_phi)*(phi[i]-alfa_phi) )+( (psi[i]-alfa_psi)*(psi[i]-alfa_psi) ) );
+		type alfa_dist=sqrt( ( (phi[i]-alfa_phi)*(phi[i]-alfa_phi) )+( (psi[i]-alfa_psi)*(psi[i]-alfa_psi) ) );
 
-		float beta_dist=sqrt( ( (phi[i]-beta_phi)*(phi[i]-beta_phi) )+( (psi[i]-beta_psi)*(psi[i]-beta_psi) ) );
+		type beta_dist=sqrt( ( (phi[i]-beta_phi)*(phi[i]-beta_phi) )+( (psi[i]-beta_psi)*(psi[i]-beta_psi) ) );
 
 		energy+=0.5*MIN(alfa_dist,beta_dist); 
 
@@ -574,7 +547,7 @@ return energy;
 //funz. hydro energy
 
 
-float hydrophobic_energy(params* input, VECTOR ca_coords){
+type hydrophobic_energy(params* input, VECTOR ca_coords){
 
 	char* se=input->seq;
 
@@ -586,35 +559,36 @@ float hydrophobic_energy(params* input, VECTOR ca_coords){
 
 	int k=0;
 
-	float energy=0;
+	type energy=0;
 	
 	
 
-	for(i=0;i<n-1;i++){//MESSO A N-1  
+	for(i=0;i<n;i++){//MESSO A N-1  
 		
 		for(j=i+1;j<n;j++){
 		    
-		    float dist = sqrt( ( (ca_coords[i*3+0]-ca_coords[j*3+0]) * (ca_coords[i*3+0]-ca_coords[j*3+0])) +
+		    type dist = sqrt(
+            ((ca_coords[i*3+0]-ca_coords[j*3+0]) * (ca_coords[i*3+0]-ca_coords[j*3+0])) +
 		    ((ca_coords[i*3+1]-ca_coords[j*3+1]) * (ca_coords[i*3+1]-ca_coords[j*3+1])) +
 		    ((ca_coords[i*3+2]-ca_coords[j*3+2]) * (ca_coords[i*3+2]-ca_coords[j*3+2]))
 		    );
-		//	float dist=abs(ca_coords[i]-ca_coords[j]);
+		//	type dist=abs(ca_coords[i]-ca_coords[j]);
 			//usando la formula di dist. euclidea consideriamo solo i valori coords_alfa[i] e coords_alfa[j]
 			//e facciamo il modulo direttamente usando la formula senza fare la radice della differenza dei quadrati
 
-			if(dist<10.0){
+			if(dist<10.0 ){
 
 				si=(int)se[i]-65;
 
 				sj=(int)se[j]-65;
 
 				//valore ascii convertito per prendere le posizioni relative agli amminoacidi
-
+                energy = energy + ((hydrophobicity[si]*hydrophobicity[sj])/dist);
 				//65 lettera A
-				if (hydrophobicity[si] != -1 && hydrophobicity[sj] != -1) {
-
-				    energy+=(hydrophobicity[si]*hydrophobicity[sj])/dist;
-				}
+//				if (hydrophobicity[si] != -1 && hydrophobicity[sj] != -1) {
+//
+//				    energy+=(hydrophobicity[si]*hydrophobicity[sj])/dist;
+//				}
 			}//if
 
 		
@@ -631,7 +605,7 @@ return energy;
 
 
 
-float elecrostatic_energy(params* input,VECTOR ca_coords){
+type elecrostatic_energy(params* input,VECTOR ca_coords){
 
 	char* se=input->seq;
 
@@ -643,7 +617,7 @@ float elecrostatic_energy(params* input,VECTOR ca_coords){
 
 	int k=0;
 
-	float energy=0;
+	type energy=0;
 	
 	
 	
@@ -652,14 +626,14 @@ float elecrostatic_energy(params* input,VECTOR ca_coords){
 		for(j=i+1;j<n;j++){
 		    
 		    
-		    float dist = sqrt( ( (ca_coords[i*3+0]-ca_coords[j*3+0]) * (ca_coords[i*3+0]-ca_coords[j*3+0])) +
+		    type dist = sqrt( ( (ca_coords[i*3+0]-ca_coords[j*3+0]) * (ca_coords[i*3+0]-ca_coords[j*3+0])) +
 		    ((ca_coords[i*3+1]-ca_coords[j*3+1]) * (ca_coords[i*3+1]-ca_coords[j*3+1])) +
 		    ((ca_coords[i*3+2]-ca_coords[j*3+2]) * (ca_coords[i*3+2]-ca_coords[j*3+2]))
 		    );
             
            // printf("dist = %f\n", dist);
 
-			//float dist=abs(ca_coords[i]-ca_coords[j]);
+			//type dist=abs(ca_coords[i]-ca_coords[j]);
 			//usando la formula di dist. euclidea consideriamo solo i valori coords_alfa[i] e coords_alfa[j]
 			//e facciamo il modulo direttamente usando la formula senza fare la radice della differenza dei quadrati
 				si=(int)se[i]-65;
@@ -670,7 +644,7 @@ float elecrostatic_energy(params* input,VECTOR ca_coords){
 
             //if (charge[si] == -1 || charge[sj] == -1) break;
 
-			if(dist<10.0 && charge[si]!=0 && charge[sj]!=0 && charge[si] != -1 && charge[sj] != -1){
+			if(dist<10.0 && charge[si]!=0 && charge[sj]!=0 && i!=j){
 
 				energy+=charge[si]*charge[sj]/(dist*4.0);
               //  printf("charge[%d] = %f", si, charge[si]);
@@ -698,7 +672,7 @@ return energy;
 
 
 
-float packing_energy(params* input,VECTOR ca_coords){
+type packing_energy(params* input,VECTOR ca_coords){
 
 	char* se=input->seq;
 
@@ -710,25 +684,26 @@ float packing_energy(params* input,VECTOR ca_coords){
 
 	int k=0;
 
-	float energy=0;
+	type energy=0.0;
 	
 	
 
 	for(i=0;i<n;i++){//MESSO A N-1  
 
-		int density=0;
+		type density=0.0;
 		
 		for(j=0;j<n;j++){
 
     
     
-            float dist = sqrt( ( (ca_coords[i*3+0]-ca_coords[j*3+0]) * (ca_coords[i*3+0]-ca_coords[j*3+0])) +
+            type dist = sqrt(
+            ((ca_coords[i*3+0]-ca_coords[j*3+0]) * (ca_coords[i*3+0]-ca_coords[j*3+0])) +
 		    ((ca_coords[i*3+1]-ca_coords[j*3+1]) * (ca_coords[i*3+1]-ca_coords[j*3+1])) +
 		    ((ca_coords[i*3+2]-ca_coords[j*3+2]) * (ca_coords[i*3+2]-ca_coords[j*3+2]))
 		    );
 
 
-			//float dist=abs(ca_coords[i]-ca_coords[j]);
+			//type dist=abs(ca_coords[i]-ca_coords[j]);
 			//usando la formula di dist. euclidea consideriamo solo i valori coords_alfa[i] e coords_alfa[j]
 			//e facciamo il modulo direttamente usando la formula senza fare la radice della differenza dei quadrati
 			si=(int)se[i]-65;
@@ -738,9 +713,9 @@ float packing_energy(params* input,VECTOR ca_coords){
 
             //if (volume[si] == -1 || volume[sj] == -1) break;
 
-			if(i != j && dist<10.0 && volume[si] != -1 && volume[sj] != -1 ){
+			if(i!=j && dist<10.0){ 
 
-				density+=(volume[sj])/(dist*dist*dist);
+				density = density + ((volume[sj])/(dist*dist*dist));
 
 			}//if	
 
@@ -752,7 +727,7 @@ float packing_energy(params* input,VECTOR ca_coords){
 		
 		}//for
 
-		energy+=( (volume[si]-density) *  (volume[si]-density) );
+		energy =  energy + ( (volume[si]-density) * (volume[si]-density) );
 	
 
 
@@ -766,12 +741,16 @@ return energy;
 }//pack
 
 
-float energy(params* input){
+type energy(params* input){
 
 	VECTOR phi= input->phi;	
 	VECTOR psi= input->psi;
 	MATRIX coords=backbone(input,phi,psi); 
-
+    
+//    for (int i=225; i<256; i++){
+//        printf("coord[%d] = %f\n", i, coords[i]);
+//    }
+//exit(0);
 	int n = input->N;
 	VECTOR ca_coords=(VECTOR)get_block(sizeof(type),n*3);//dim n
 
@@ -798,34 +777,36 @@ float energy(params* input){
 	//richiamo sottofunzioni
 
 
-	float rama=rama_energy(input,phi,psi);
+	type rama=rama_energy(input,phi,psi);
 
-	float hydro=hydrophobic_energy(input,ca_coords);
+	type hydro=hydrophobic_energy(input,ca_coords);
 
-	float elec=elecrostatic_energy(input,ca_coords);
+	type elec=elecrostatic_energy(input,ca_coords);
 
-	float pack=packing_energy(input,ca_coords);
+	type pack=packing_energy(input,ca_coords);
 
 	//pesi per i contributi
 
 
-	float omega_rama=1.0;
+	type omega_rama=1.0;
 
 
-	float omega_hydro=0.5;
+	type omega_hydro=0.5;
 
 
 
-	float omega_elec=0.2;
+	type omega_elec=0.2;
 
 
-	float omega_pack=0.3;
+	type omega_pack=0.3;
 
-	float total_energy=omega_rama*rama + omega_hydro*hydro + omega_elec*elec + omega_pack*pack;
+	type total_energy=omega_rama*rama + omega_hydro*hydro + omega_elec*elec + omega_pack*pack;
 
-    //printf("Energie rama = %f , hydro = %f, elec = %f, pack = %f \n", rama, hydro, elec, pack);
-    //printf("total energy = %f\n", total_energy);
-    
+//    printf("Energie rama = %f , hydro = %f, elec = %f, pack = %f \n", rama, hydro, elec, pack);
+//    
+//    printf("Energia iniziale = %f\n", total_energy);
+//exit(0);
+//
 	free_block(ca_coords);
 
 	free_block(coords);
@@ -838,8 +819,7 @@ return total_energy;
 
 //fine rotation
 
-void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
-	//da qui inserire poi definizione funzione backbone
+void pst(params* input){ 
 	
 	char* s = input->seq;
  	int n = input->N;
@@ -852,22 +832,32 @@ void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
 	VECTOR psi= input->psi;
 	
 	//inizializzarli random 
-	int i;
-	for(i=0; i<n;i++){
-		phi[i]=(random()*2 * M_PI) - M_PI;
-		psi[i]=(random()*2 * M_PI) - M_PI;
-       // printf("psi[%d] = %f\n", i,psi[i]);
-      //  printf("phi[%d] = %f\n", i,phi[i]);
-	}
-   
-
-	float e = energy(input);
+//	int i;
+//	for(i=0; i<n;i++){
+//		phi[i]=(random()*2 * M_PI) - M_PI;
+//		psi[i]=(random()*2 * M_PI) - M_PI;
+//       // printf("psi[%d] = %f\n", i,psi[i]);
+//      //  printf("phi[%d] = %f\n", i,phi[i]);
+//	}
+   int i;
+//	for(i=0; i<5;i++){
+//
+//
+//        printf("psi[%d] = %f\n", i,psi[i]);
+//        printf("phi[%d] = %f\n", i,phi[i]);
+//	}
+//
+	type e = energy(input);
+    //printf("Energy = %f\n", e);
+    //exit (0);
 	int t = 0;
 
-	while(T>0){
-		i=0;
-		i=(int)(random() * (n+1));
-
+	//while(T>0){
+    do{		
+        i=0;
+		i=(int)(random() * n);
+            
+        
 		type y_phi = (random()*2 * M_PI) - M_PI;
         
 		phi[i]+=y_phi;
@@ -875,7 +865,7 @@ void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
 		type y_psi = (random()*2 * M_PI) - M_PI;
 		psi[i]+=y_psi;
 
-        while(phi[i] > M_PI){
+      /*  while(phi[i] > M_PI){
             phi[i]-= 2.0*M_PI;        
         }
         while(psi[i] > M_PI){
@@ -886,11 +876,11 @@ void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
         }
         while(psi[i] < -M_PI){
             psi[i]+= 2.0*M_PI;        
-        }
+        }*/
         //printf("psi[%d] = %f\n", i,psi[i]);
        // printf("phi[%d] = %f\n", i,phi[i]);
 
-		float newE = energy(input);
+		type newE = energy(input);
 
 		type delta = newE-e;
 
@@ -909,7 +899,7 @@ void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
 			else{
 				phi[i]-=y_phi;
 				psi[i]-=y_psi;
-                while(phi[i] > M_PI){
+            /*    while(phi[i] > M_PI){
                     phi[i]-= 2.0*M_PI;        
                 }
                 while(psi[i] > M_PI){
@@ -920,16 +910,17 @@ void pst(params* input){ //TODO MODIFICARE FACENDO LA FUNZIONE BACKBON A SE
                 }
                 while(psi[i] < -M_PI){
                     psi[i]+= 2.0*M_PI;        
-                }
+                }*/
 			}
-		}
+		} 
 
 		t +=1;
 		T = T0 - sqrt(alpha*t);//da controllare
 
    
-	}
-	 printf("energy = %f\n", e);
+	}while(T>0);
+	 
+    printf("energy = %f\n", e);
 }//fine_pst
 
 
@@ -938,7 +929,7 @@ int main(int argc, char** argv) {
 	char fname_psi[256];
 	char* seqfilename = NULL;
 	clock_t t;
-	float time;
+	type time;
 	int d;
 	
 	//
@@ -1094,7 +1085,7 @@ int main(int argc, char** argv) {
 	t = clock();
 	pst(input);
 	t = clock() - t;
-	time = ((float)t)/CLOCKS_PER_SEC;
+	time = ((type)t)/CLOCKS_PER_SEC;
 
 	if(!input->silent)
 		printf("PST time = %.3f secs\n", time);
