@@ -83,4 +83,9 @@ fare qualche altra ottimizzazione
 
 fare ottimizzazione rama in sse a 32
 
+cont.20 gennaio
+
+incominciata ottimizzazione pack
+diversi errori risolti sintattici
+loop infinito->vedere possibili errori
 
