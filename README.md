@@ -45,6 +45,8 @@ Risolto il probelma degli angoli facendo la normalizzazione;ora il range degli a
 effettuato ricevimento dal prof;
 primo problema risolto;doppia generaziome casuale degli angoli phi e psi fatti già da prima da gen_rnd_mat che andava a sovrapporre i vecchi valori ed aggiornarli con altri senza trovarsi
 secondo problema risolto:nella funzione rotation è stata tolta sqrt perchè è solo un prodotto scalare senza normalizzazione
+
+
 terzo problema da aggiustare:
 le norme in backbone di v1 v2 e v3 vanno fatte fuori dal for e non dentro il for;
 
@@ -60,3 +62,25 @@ valori energie dei prof------->
 rama_e: 9538.258065, hydro_e: 98.171527, elec_e: -0.540941, pack_e: 36599998.039925
 ENERGIA INIZIALE: 10989586.647618
 -------------------------------------->
+
+
+
+20/01
+
+risolto problema file pst ; ora i risultati corretti;
+solo il file c ci dava una media di 0.6 sec
+file a 64 bit
+ottimizzata in assembly funzione rama_energy con code vectorization
+
+con assembly:
+angelica ->virtual machine ->circa 0.9 sec
+
+lorenzo->circa 1.3 sec WSL(mini vm)
+
+andrea->ambiente linux nativo con 8 core->circa 0.62 s 
+//todo
+fare qualche altra ottimizzazione
+
+fare ottimizzazione rama in sse a 32
+
+
