@@ -239,6 +239,8 @@ void gen_rnd_mat(VECTOR v, int N){
 	}
 }
 
+// PROCEDURE ASSEMBLY
+extern void prova(params* input);
 
 //int s=stru->N;
  
@@ -253,47 +255,25 @@ type rama_energy();
 
 
 MATRIX rotation(VECTOR axis,type theta){
- 		
- 		//normalizz.vett.
- 		//il prod.scalare è stato realizzato all'interno della normalizzazione
- 		
-       // printf("axis[0]= %f\n", axis[0]);
-        //printf("axis[1]= %f\n", axis[1]);
-      //  printf("axis[2]= %f\n", axis[2]);
 
  		type norm=(axis[0]*axis[0]+axis[1]*axis[1]+axis[2]*axis[2]);
- 		
- 		
- 		//VECTOR assi_norm=(VECTOR)get_block(sizeof(type),3);
  		
  		//fase di normalizzazione
  		
  		for (int i=0;i<3;i++){
  		
  			axis[i]=axis[i]/norm;
-            //printf("assi_norm [%d] = %f\n", i, assi_norm[i]);
+           
  		}//for
- 		
- 		
- 	
- 	
- 		//usiamo le approssimazioni per calc.i coefficenti
  		
  		type half_theta=theta/2.0;
         
-        //printf("half_theta = %f \n", half_theta); 		
-
  		type cos_t=1-((half_theta*half_theta)/2) + ((half_theta*half_theta*half_theta*half_theta)/24)-((half_theta*half_theta*half_theta*half_theta*half_theta*half_theta)/720);//appr.cos
 		
 		
 		type sen_t=half_theta-((half_theta*half_theta*half_theta)/6)+((half_theta*half_theta*half_theta*half_theta*half_theta)/120)-((half_theta*half_theta*half_theta*half_theta*half_theta*half_theta*half_theta)/5040);
 		
-        //type cos_t = cos(half_theta);
-        //type sen_t = sin(half_theta);
-
 		type a=cos_t;
-		
-		//definiamo b,c,d
 		
 		type b= -axis[0]*sen_t;
 		
@@ -302,13 +282,6 @@ MATRIX rotation(VECTOR axis,type theta){
 		type d= -axis[2]*sen_t;
 		
 
-      /*  printf("a = %f \n", a);
-        printf("b = %f \n", b);
-        printf("c = %f \n", c);
-        printf("d = %f \n", d);
-        printf("sen_t = %f\n", sen_t);
-        printf("cos_t = %f\n", cos_t);
-        */
 		//allochiamo la matrice
 		
 		MATRIX rot_matrix=alloc_matrix(3,3);
@@ -341,17 +314,9 @@ MATRIX rotation(VECTOR axis,type theta){
 		
 		//liberiamo lo spazio allocato
         int i;
-        /*for (i=0; i< 9; i++){
-            printf("rot_matrix[%d] = %f \n", i, rot_matrix[i]);
-        }*/
-		
-		//free_block(assi_norm);
-		
+        
 	return rot_matrix;
- 		
- 		
- 		
- 		
+ 			
  	
  	}//rotation
 
@@ -543,12 +508,11 @@ VECTOR backbone(params* input,VECTOR phi,VECTOR psi){
     return coords;
 }//backbone
 
-extern type rama(params* input, VECTOR* phi, VECTOR* psi);
 
+extern type rama(int n, VECTOR phi, VECTOR psi);
 //sottofunzioni di energy
 //
 //type rama_energy(params* input,VECTOR phi,VECTOR psi){
-//    
 //
 //	int i;
 //
@@ -812,8 +776,8 @@ type energy(params* input){
 
 	//richiamo sottofunzioni
 
-    type ramaenergy = rama(input, &phi, &psi);
-//	type rama=rama_energy(input,phi,psi);
+
+	type ramaenergy=rama(n,phi,psi);
 
 	type hydro=hydrophobic_energy(input,ca_coords);
 
@@ -884,7 +848,7 @@ void pst(params* input){
 //	}
 //
 	type e = energy(input);
-//    printf("Energy = %f\n", e);
+    //printf("Energy = %f\n", e);
     //exit (0);
 	int t = 0;
 
@@ -950,10 +914,6 @@ void pst(params* input){
 			}
 		} 
 
-//        if(t<10){
-//            printf("energia = %f, i=%i\n", e, i);
-//            
-//}
 		t +=1;
 		T = T0 - sqrt(alpha*t);//da controllare
 
